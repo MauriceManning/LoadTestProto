@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jms="http://www.springframework.org/schema/integration/jms"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration-2.2.xsd
+    http://www.springframework.org/schema/integration/jms
+    http://www.springframework.org/schema/integration/jms/spring-integration-jms-2.2.xsd">
+
+    <context:component-scan base-package="edu.berkeley.path.next.ResultsProcessor"/>
+
+    <int:channel id="notificationChannel"/>
+
+    <jms:message-driven-channel-adapter channel="notificationChannel"
+                                        extract-payload="true"
+                                        connection-factory="connectionFactory"
+                                        destination-name="notification"
+                                        pub-sub-domain="true"/>
+
+    <int:service-activator input-channel="notificationChannel" ref="linkCalculator"/>
+
+
+</beans>

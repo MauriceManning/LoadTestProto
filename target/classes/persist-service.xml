@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jms="http://www.springframework.org/schema/integration/jms"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration-2.2.xsd
+    http://www.springframework.org/schema/integration/jms
+    http://www.springframework.org/schema/integration/jms/spring-integration-jms-2.2.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+    <context:component-scan base-package="edu.berkeley.path.next.persistService"/>
+
+    <import resource="classpath:datasource.xml"/>
+    <import resource="classpath:aop-config.xml"/>
+
+    <!-- Register @Autowired annotation -->
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
+
+    <bean id="ChannelController" class="edu.berkeley.path.next.persistService.LinkDataPersistController" >
+    </bean>
+
+
+    <bean id="timingAdvice" class="org.springframework.aop.interceptor.PerformanceMonitorInterceptor">
+        <property name="useDynamicLogger" value="true"></property>
+    </bean>
+
+    <aop:config>
+        <aop:advisor pointcut="execution(* edu.berkeley.path.next.persistService.LinkDataPersistController.*(..))"
+                     advice-ref="timingAdvice"/>
+        <aop:advisor pointcut="execution(* edu.berkeley.path.next.persistService.DBChannel.*(..))"
+                     advice-ref="timingAdvice"/>
+    </aop:config>
+
+
+    <int:channel id="notificationChannel"/>
+
+    <jms:message-driven-channel-adapter channel="notificationChannel"
+                                        extract-payload="true"
+                                        connection-factory="connectionFactory"
+                                        destination-name="notification"
+                                        pub-sub-domain="true"/>
+
+    <int:service-activator input-channel="notificationChannel" ref="messageListener2"/>
+
+</beans>
